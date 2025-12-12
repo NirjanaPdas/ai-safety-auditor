@@ -98,3 +98,27 @@ Produces both **per-post** and **aggregated risk levels**.
 ├── generate_synthetic_data.py
 └── requirements.txt
 ```
+
+---
+
+## ▶️ Running the App Locally
+
+### 1️⃣ Clone the repository
+```bash
+git clone https://github.com/nirjanadas/safe-scroll.git
+cd safe-scroll
+```
+2️⃣ Install dependencies
+```bash
+pip install -r requirements.txt
+```
+3️⃣ Run the app
+```bash
+streamlit run app.py
+```
+
+
+
+
+
+
