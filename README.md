@@ -62,7 +62,20 @@ Produces both **per-post** and **aggregated risk levels**.
 - Summarizes risks, evidence, and final recommendation  
 
 ---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|------|-----------|
+| UI | Streamlit |
+| Language | Python |
+| AI / LLM | OpenAI GPT (multi-agent setup) |
+| Data | Synthetic CSV datasets |
+| Architecture | Multi-Agent Safety System |
+| Styling | Custom Streamlit theme |
+| Charts | Streamlit native charts |
  
+---
 
 ## 🗂 Folder structure
 
