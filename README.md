@@ -1,3 +1,18 @@
+<!-- ===================== -->
+<!-- SafeScroll App Banner -->
+<!-- ===================== -->
+
+<p align="center">
+  <img src="assets/safescroll_overview.png" width="100%" />
+</p>
+
+<p align="center">
+  <img src="assets/safescroll_moderation.png" width="100%" />
+</p>
+
+---
+
+
 # 🛡️ AI Safety & Risk Auditor for Social Platforms
 
 This project is a small simulation of an **internal Trust & Safety tool** for a social media platform.
