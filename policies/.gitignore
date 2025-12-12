@@ -1,2 +1,69 @@
+# Python cache & build files
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.pkl
+*.db
+*.sqlite3
+
+# Byte-compiled / optimized DLL files
+*.so
+*.dll
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# Streamlit / app artifacts
+.streamlit/*.toml
+.streamlit/secrets.toml
+.streamlit/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.iml
+
+# JetBrains
+*.ipr
+*.iws
+
+# Environment & API keys
+*.env
+.env.*
+secrets.env
+
+# Jupyter Notebook (if used)
+.ipynb_checkpoints/
+
+# Data files
+data/*.csv
+data/*.json
+data/*.txt
+
+# Cache directories
+.cache/
+.pytype/
+.mypy_cache/
+pytest_cache/
+
+# Docker / containers
+*.pid

@@ -4,44 +4,76 @@ from typing import Dict, List
 
 from openai import OpenAI
 
+# Project branding
+PROJECT_NAME = "SafeScroll"
+PROJECT_SLUG = "safescroll"
+
 # OpenAI client (expects OPENAI_API_KEY env variable)
+# Keep the placeholder; user must set the env var in production.
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", "YOUR_OPENAI_API_KEY_HERE"))
 
+# Default model used for agents (change if you'd like)
 LLM_MODEL = "gpt-4o-mini"
 
 
 def _run_json_agent(system_prompt: str, user_content: str, max_tokens: int = 400) -> Dict:
     """
     Helper to call an LLM agent and parse JSON response.
+
+    Returns an empty dict on parse failure.
     """
-    resp = client.chat.completions.create(
-        model=LLM_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content},
-        ],
-        response_format={"type": "json_object"},
-        max_tokens=max_tokens,
-    )
-    content = resp.choices[0].message.content
+    try:
+        resp = client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            response_format={"type": "json_object"},
+            max_tokens=max_tokens,
+        )
+    except Exception as e:
+        # Return a sensible error structure so callers can handle missing output
+        return {"error": f"LLM request failed: {e}"}
+
+    # Extract content in a defensive way
+    try:
+        content = resp.choices[0].message.content
+    except Exception:
+        # Unexpected response shape
+        return {"error": "unexpected LLM response format"}
+
+    # Try to parse JSON strictly, fall back to heuristic extraction
     try:
         return json.loads(content)
     except Exception:
-      
+        # attempt to recover JSON substring
         try:
             idx = content.rfind("{")
             if idx != -1:
                 return json.loads(content[idx:])
         except Exception:
-            return {}
+            # best-effort: return raw content for debugging
+            return {"error": "failed to parse JSON", "raw": content}
 
 
 def underage_risk_agent(user_profile: Dict, posts: List[Dict]) -> Dict:
     """
-    Agent 1: Estimate underage risk based on declared age and content style.
+    Agent: Estimate underage risk based on declared age and content style.
+
+    Input:
+      - user_profile: {"user_id": "...", "age": int, ...}
+      - posts: list of {"post_id": "...", "text": "...", ...}
+
+    Output JSON structure:
+    {
+      "is_minor_suspected": true,
+      "underage_misrepresentation_risk": 0,
+      "reason": ""
+    }
     """
-    system_prompt = """
-You are an Underage Risk Detection Agent for a social media company.
+    system_prompt = f"""
+You are an Underage Risk Detection Agent for {PROJECT_NAME}.
 
 You receive:
 - A user profile (age, account_type, created_at)
@@ -54,11 +86,11 @@ Task:
 
 Output strict JSON:
 
-{
+{{
   "is_minor_suspected": true,
   "underage_misrepresentation_risk": 0,
   "reason": ""
-}
+}}
 """
     user_str = json.dumps(user_profile, ensure_ascii=False)
     posts_str = json.dumps(posts, ensure_ascii=False)
@@ -68,10 +100,35 @@ Output strict JSON:
 
 def content_risk_agent(posts: List[Dict]) -> Dict:
     """
-    Agent 2: Analyze content for bullying, self-harm, sexual exploitation, substance abuse.
+    Agent: Analyze content for bullying, self-harm, sexual exploitation, substance abuse.
+
+    Input:
+      - posts: list of {"post_id": "...", "text": "...", ...}
+
+    Output JSON structure:
+    {
+      "per_post": [
+        {
+          "post_id": "",
+          "text": "",
+          "bullying_risk": "none",
+          "self_harm_risk": "none",
+          "sexual_exploitation_risk": "none",
+          "substance_abuse_risk": "none",
+          "notes": ""
+        }
+      ],
+      "overall": {
+        "bullying_risk": "none",
+        "self_harm_risk": "none",
+        "sexual_exploitation_risk": "none",
+        "substance_abuse_risk": "none",
+        "summary": ""
+      }
+    }
     """
-    system_prompt = """
-You are a Content Safety Agent.
+    system_prompt = f"""
+You are a Content Safety Agent working for {PROJECT_NAME}.
 
 You receive a list of posts from one user. For each post, you should detect:
 - bullying
@@ -85,9 +142,9 @@ Overall risk levels should be "none", "low", "medium", or "high".
 
 Output this strict JSON:
 
-{
+{{
   "per_post": [
-    {
+    {{
       "post_id": "",
       "text": "",
       "bullying_risk": "none",
@@ -95,16 +152,16 @@ Output this strict JSON:
       "sexual_exploitation_risk": "none",
       "substance_abuse_risk": "none",
       "notes": ""
-    }
+    }}
   ],
-  "overall": {
+  "overall": {{
     "bullying_risk": "none",
     "self_harm_risk": "none",
     "sexual_exploitation_risk": "none",
     "substance_abuse_risk": "none",
     "summary": ""
-  }
-}
+  }}
+}}
 """
     posts_str = json.dumps(posts, ensure_ascii=False)
     return _run_json_agent(system_prompt, posts_str, max_tokens=1000)
@@ -112,10 +169,27 @@ Output this strict JSON:
 
 def interaction_risk_agent(user_profile: Dict, interactions: List[Dict]) -> Dict:
     """
-    Agent 3: Analyze DMs/interactions for grooming-like patterns and power imbalance.
+    Agent: Analyze direct messages / interactions for grooming-like patterns and power imbalance.
+
+    Input:
+      - user_profile: profile for the audited user
+      - interactions: list of {"interaction_id","from_user","to_user","text","from_age","to_age",...}
+
+    Output JSON structure:
+    {
+      "grooming_risk": "none",
+      "evidence": [
+        {
+          "interaction_id": "",
+          "text_snippet": "",
+          "comment": ""
+        }
+      ],
+      "summary": ""
+    }
     """
-    system_prompt = """
-You are an Interaction Risk Agent for a social platform.
+    system_prompt = f"""
+You are an Interaction Risk Agent for {PROJECT_NAME}.
 
 You receive:
 - A user profile
@@ -130,17 +204,17 @@ Task:
 
 Output strict JSON:
 
-{
+{{
   "grooming_risk": "none",
   "evidence": [
-    {
+    {{
       "interaction_id": "",
       "text_snippet": "",
       "comment": ""
-    }
+    }}
   ],
   "summary": ""
-}
+}}
 """
     payload = {"user_profile": user_profile, "interactions": interactions}
     return _run_json_agent(system_prompt, json.dumps(payload, ensure_ascii=False), max_tokens=800)
@@ -148,10 +222,22 @@ Output strict JSON:
 
 def policy_violation_agent(policy_text: str, aggregated_findings: Dict) -> Dict:
     """
-    Agent 4: Map earlier findings to company policy violations.
+    Agent: Map earlier findings to company policy violations.
+
+    Input:
+      - policy_text: raw company safety policies (string)
+      - aggregated_findings: dict combining outputs from other agents
+
+    Output JSON structure:
+    {
+      "violated_sections": [],
+      "overall_severity": "low",
+      "recommended_action": "",
+      "explanation": ""
+    }
     """
-    system_prompt = """
-You are a Policy Violation Agent.
+    system_prompt = f"""
+You are a Policy Violation Agent for {PROJECT_NAME}.
 
 You receive:
 - Company safety policies text.
@@ -170,12 +256,12 @@ Task:
 
 Output strict JSON:
 
-{
+{{
   "violated_sections": [],
   "overall_severity": "low",
   "recommended_action": "",
   "explanation": ""
-}
+}}
 """
     payload = {"policies": policy_text, "findings": aggregated_findings}
     return _run_json_agent(system_prompt, json.dumps(payload, ensure_ascii=False), max_tokens=600)
@@ -189,10 +275,20 @@ def report_generator_agent(
     policy_result: Dict,
 ) -> Dict:
     """
-    Agent 5: Generate a human-readable safety report.
+    Agent: Generate a human-readable safety report (markdown-style).
+
+    Input:
+      - structured JSON from the other agents
+    Output JSON structure:
+    {
+      "risk_title": "",
+      "overall_risk_score": 0,
+      "risk_summary": "",
+      "markdown_report": ""
+    }
     """
-    system_prompt = """
-You are a Safety Report Generator Agent.
+    system_prompt = f"""
+You are a Safety Report Generator Agent for {PROJECT_NAME}.
 
 You receive structured JSON from several safety agents for ONE user:
 - underage risk
@@ -210,12 +306,12 @@ Task:
 
 Output strict JSON:
 
-{
+{{
   "risk_title": "",
   "overall_risk_score": 0,
   "risk_summary": "",
   "markdown_report": ""
-}
+}}
 """
     payload = {
         "user_profile": user_profile,
