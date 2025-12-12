@@ -28,24 +28,41 @@ This project is built for **research, demos, and resume-ready showcasing** of re
 
 ---
 
- 
-## ✨ Features
+## 🧠 How SafeScroll Works
 
-- Multi-agent GenAI workflow:
-  - Underage Risk Agent
-  - Content Safety Agent (bullying, self-harm, grooming, substance)
-  - Interaction/Grooming Agent
-  - Policy Violation Agent
-  - Safety Report Generator
-- Streamlit dashboard to:
-  - Select a user
-  - Inspect posts + DMs
-  - Run a complete safety audit
-  - View structured JSON outputs
-  - Visualise risk levels with a bar chart
-  - Download the final report as a `.txt` file
+SafeScroll uses a **multi-agent GenAI architecture**, where each agent focuses on a specific safety responsibility.
+
+### 🔹 1. Underage Risk Agent
+- Evaluates declared age vs. content style  
+- Flags possible underage misrepresentation  
+- Outputs a risk score with reasoning  
+
+### 🔹 2. Content Safety Agent
+Analyzes posts for:
+- Bullying & harassment  
+- Self-harm indicators  
+- Sexual exploitation cues  
+- Substance abuse references  
+
+Produces both **per-post** and **aggregated risk levels**.
+
+### 🔹 3. Interaction (DM) Risk Agent
+- Detects grooming patterns  
+- Identifies secrecy pressure & power imbalance  
+- Considers age differences in conversations  
+
+### 🔹 4. Policy Violation Agent
+- Maps AI findings to company safety policies  
+- Determines severity  
+- Recommends moderation actions (monitor, warn, restrict, escalate)  
+
+### 🔹 5. Safety Report Generator
+- Combines all agent outputs  
+- Generates a clear, human-readable safety report  
+- Summarizes risks, evidence, and final recommendation  
 
 ---
+ 
 
 ## 🗂 Folder structure
 
